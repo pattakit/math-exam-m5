@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบสอบออนไลน์ - ฟังก์ชันตรีโกณมิติ ม.5</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- MathJax CDN สำหรับแสดงสูตรคณิตศาสตร์ -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; }
+            .print-container { box-shadow: none !important; border: none !important; padding: 0 !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white shadow-md no-print">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <img id="schoolLogo" src="https://via.placeholder.com/50" alt="Logo" class="w-12 h-12 rounded-full object-cover bg-white p-1">
+                <div>
+                    <h1 id="headerTitle" class="text-xl font-bold">โรงเรียนประสิทธิ์ศึกษาสงเคราะห์</h1>
+                    <p id="headerSubtitle" class="text-sm text-indigo-200">แบบทดสอบ เรื่อง ฟังก์ชันตรีโกณมิติ ม.5</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="openTeacherModal()" class="bg-indigo-600 hover:bg-indigo-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow border border-indigo-500 flex items-center gap-2">
+                    ⚙️ โหมดคุณครู
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-4 py-8 flex-grow w-full">
+
+        <!-- STEP 1: Registration Form -->
+        <section id="regSection" class="bg-white rounded-2xl shadow-xl p-8 border border-slate-100 max-w-lg mx-auto">
+            <div class="text-center mb-6">
+                <span class="bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">ลงทะเบียนก่อนเข้าสอบ</span>
+                <h2 id="formMainTitle" class="text-2xl font-bold text-slate-900 mt-2">แบบทดสอบ ฟังก์ชันตรีโกณมิติ ม.5</h2>
+                <p id="formSubTitle" class="text-sm text-slate-500 mt-1">กรอกข้อมูลเพื่อเริ่มสอบ (ระบบอนุญาตให้ส่งคำตอบได้เพียง 1 ครั้งเท่านั้น)</p>
+            </div>
+            <form id="studentForm" onsubmit="startExam(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">เลขประจำตัวนักเรียน</label>
+                    <input type="text" id="stdId" required placeholder="เช่น 12345" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">ชื่อ - นามสกุล</label>
+                    <input type="text" id="stdName" required placeholder="เช่น เด็กชายรักเรียน เพียรศึกษา" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">ระดับชั้น / ห้อง</label>
+                        <select id="stdGrade" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white">
+                            <!-- Injected via JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">เลขที่</label>
+                        <input type="number" id="stdNo" required placeholder="เช่น 15" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg shadow-lg hover:shadow-indigo-500/30 transition duration-200 mt-2">
+                    🚀 เริ่มทำข้อสอบ
+                </button>
+            </form>
+        </section>
+
+        <!-- ALREADY EXAMINED WARNING SCREEN -->
+        <section id="blockedSection" class="hidden bg-white rounded-2xl shadow-xl p-8 border border-slate-100 max-w-lg mx-auto text-center space-y-4">
+            <div class="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-4xl mx-auto shadow-inner">
+                🔒
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900">คุณได้ทำการสอบไปแล้ว!</h2>
+            <p class="text-slate-500 text-sm">ระบบบันทึกผลการสอบด้วยเลขประจำตัวนี้เรียบร้อยแล้ว อนุญาตให้ส่งคำตอบได้เพียง 1 ครั้งเท่านั้น</p>
+            <p class="text-xs text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-200">หากมีความจำเป็นต้องสอบแก้ตัวหรือเกิดข้อผิดพลาด กรุณาติดต่อคุณครูผู้สอนเพื่อปลดล็อกสิทธิ์ให้ครับ</p>
+            <button onclick="location.reload()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2.5 rounded-lg transition">
+                🔄 กลับหน้าหลัก
+            </button>
+        </section>
+
+        <!-- STEP 2: Exam Interface -->
+        <section id="examSection" class="hidden space-y-6">
+            <!-- Exam Info Header & Timer Bar -->
+            <div class="bg-white rounded-xl shadow-md p-4 flex flex-col sm:flex-row justify-between items-center gap-4 sticky top-4 z-10 border border-indigo-100">
+                <div>
+                    <h3 id="examInfoTitle" class="font-bold text-indigo-900 text-lg">แบบทดสอบ เรื่อง ฟังก์ชันตรีโกณมิติ ม.5</h3>
+                    <p class="text-xs text-slate-500">ผู้สอบ: <span id="displayName" class="font-semibold text-slate-700"></span> (<span id="displayId"></span>)</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="cheatWarning" class="hidden bg-amber-100 text-amber-800 text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 shadow-sm">
+                        ⚠️ สลับจอ: <span id="cheatCount">0</span> ครั้ง
+                    </div>
+                    <div class="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg font-bold text-lg flex items-center gap-2 border border-indigo-200 shadow-inner">
+                        ⏱️ <span id="timer">60:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questions Container -->
+            <form id="examForm" onsubmit="submitExam(event)" class="space-y-6">
+                <div id="questionsContainer" class="space-y-6">
+                    <!-- Dynamic Questions injected here -->
+                </div>
+                <div class="pt-4 pb-12 flex justify-center">
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-bold px-10 py-3.5 rounded-xl shadow-xl hover:shadow-emerald-500/30 transition transform hover:-translate-y-0.5">
+                        ✅ ส่งคำตอบและสิ้นสุดการสอบ
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- STEP 3: Result Interface -->
+        <section id="resultSection" class="hidden bg-white rounded-2xl shadow-xl p-8 border border-slate-100 max-w-xl mx-auto text-center space-y-6">
+            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto shadow-inner">
+                🎉
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900">ส่งข้อสอบสำเร็จเรียบร้อย!</h2>
+                <p class="text-slate-500 text-sm mt-1">ระบบได้บันทึกคะแนนของคุณลงในระบบเรียบร้อยแล้ว (ไม่สามารถทำซ้ำได้)</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 inline-block w-full">
+                <p class="text-slate-600 text-sm">คะแนนที่ทำได้</p>
+                <div class="text-5xl font-black text-indigo-600 my-2"><span id="scoreDisplay">0</span> <span class="text-2xl font-normal text-slate-400">/ 30</span></div>
+                <p id="scoreStatus" class="text-sm font-semibold text-emerald-600 mt-2"></p>
+            </div>
+            <div class="flex gap-4 justify-center pt-2 no-print">
+                <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2.5 rounded-lg font-medium shadow transition flex items-center gap-2">
+                    🖨️ บันทึกเป็น PDF / พิมพ์ผลสอบ
+                </button>
+                <button onclick="location.reload()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium shadow transition">
+                    🔄 กลับหน้าหลัก
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 no-print">
+        <p>ระบบสอบออนไลน์อัจฉริยะ • วิชาคณิตศาสตร์เพิ่มเติม ม.5 บทฟังก์ชันตรีโกณมิติ</p>
+    </footer>
+
+    <!-- TEACHER MODAL -->
+    <div id="teacherModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <!-- Modal Header -->
+            <div class="bg-indigo-700 text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-lg flex items-center gap-2">⚙️ แผงควบคุมและตั้งค่าคุณครู</h3>
+                <button onclick="closeTeacherModal()" class="text-indigo-200 hover:text-white text-xl font-bold">&times;</button>
+            </div>
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto space-y-6 flex-grow">
+                <!-- Tab Controls -->
+                <div class="flex border-b border-slate-200 gap-4 flex-wrap">
+                    <button onclick="switchTab('settingsTab')" id="btnSettingsTab" class="pb-2 font-semibold text-indigo-600 border-b-2 border-indigo-600 text-sm">1. ตั้งค่า & Sheets</button>
+                    <button onclick="switchTab('gradesTab')" id="btnGradesTab" class="pb-2 font-semibold text-slate-500 hover:text-slate-800 text-sm">2. จัดการห้องเรียน</button>
+                    <button onclick="switchTab('recordsTab')" id="btnRecordsTab" class="pb-2 font-semibold text-slate-500 hover:text-slate-800 text-sm">3. รีเซ็ตสิทธิ์นักเรียน</button>
+                    <button onclick="switchTab('questionsTab')" id="btnQuestionsTab" class="pb-2 font-semibold text-slate-500 hover:text-slate-800 text-sm">4. คลังข้อสอบ</button>
+                </div>
+
+                <!-- Tab 1: General Settings -->
+                <div id="settingsTab" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">รหัสผ่านเข้าโหมดคุณครู</label>
+                            <input type="password" id="tPassword" value="1234" class="w-full px-3 py-2 border rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">URL โลโก้โรงเรียน (รูปภาพ)</label>
+                            <input type="text" id="tLogoUrl" class="w-full px-3 py-2 border rounded-lg text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">ชื่อโรงเรียน</label>
+                        <input type="text" id="tSchoolName" class="w-full px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">หัวข้อวิชา / รายละเอียดการสอบ</label>
+                        <input type="text" id="tExamTitle" class="w-full px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Google Sheets Web App URL (สำหรับส่งคะแนน)</label>
+                        <input type="text" id="tSheetUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                    <button onclick="saveGeneralSettings()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-medium">💾 บันทึกการตั้งค่าทั่วไป</button>
+                </div>
+
+                <!-- Tab 2: Grade Management -->
+                <div id="gradesTab" class="hidden space-y-4">
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 space-y-3">
+                        <h4 class="font-bold text-sm text-indigo-900">เพิ่มห้องเรียนใหม่</h4>
+                        <div class="flex gap-2">
+                            <input type="text" id="newGradeInput" placeholder="เช่น ม.5/3 หรือ ห้องพิเศษวิทย์" class="flex-grow px-3 py-2 border rounded-lg text-sm bg-white">
+                            <button onclick="addGrade()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium">➕ เพิ่มห้อง</button>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <h4 class="font-bold text-sm text-slate-700">รายการห้องเรียนทั้งหมดที่มีในระบบ:</h4>
+                        <div id="gradeListContainer" class="space-y-2 max-h-48 overflow-y-auto"></div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Reset Student Records -->
+                <div id="recordsTab" class="hidden space-y-4">
+                    <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-2">
+                        <h4 class="font-bold text-sm text-amber-900">จัดการสิทธิ์การสอบของนักเรียน</h4>
+                        <p class="text-xs text-amber-700">รายชื่อนักเรียนที่กดส่งข้อสอบไปแล้ว จะถูกบันทึกไว้เพื่อให้ส่งได้เพียงครั้งเดียว หากต้องการให้เด็กสอบแก้ตัว ให้คลิกปุ่มรีเซ็ตสิทธิ์ด้านล่างครับ</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-bold text-sm text-slate-700">รายชื่อนักเรียนที่ส่งข้อสอบแล้ว:</h4>
+                            <button onclick="clearAllRecords()" class="text-rose-600 hover:text-rose-800 text-xs font-semibold px-3 py-1 bg-rose-50 rounded border border-rose-200">🗑️ ล้างประวัติทั้งหมด</button>
+                        </div>
+                        <div id="recordListContainer" class="space-y-2 max-h-56 overflow-y-auto border border-slate-200 p-3 rounded-xl bg-slate-50"></div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Question Editor -->
+                <div id="questionsTab" class="hidden space-y-4">
+                    <div class="flex justify-between items-center bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+                        <span class="text-sm font-medium text-indigo-800">จัดการชุดข้อสอบตรีโกณมิติ 30 ข้อ (แก้ไขโจทย์ ตัวเลือก และเฉลยได้อิสระ)</span>
+                        <button onclick="saveAllQuestions()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow">💾 บันทึกข้อสอบทั้งหมด</button>
+                    </div>
+                    <div id="editorContainer" class="space-y-4"></div>
+                </div>
+            </div>
+            <!-- Modal Footer -->
+            <div class="bg-slate-100 px-6 py-3 flex justify-between items-center border-t">
+                <button onclick="resetDefaultConfig()" class="text-rose-600 hover:text-rose-800 text-xs font-medium">🔄 รีเซ็ตค่าเริ่มต้นทั้งหมด</button>
+                <button onclick="closeTeacherModal()" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        let config = JSON.parse(localStorage.getItem('math_trig_config_m5')) || {
+            schoolName: "โรงเรียนประสิทธิ์ศึกษาสงเคราะห์",
+            examTitle: "แบบทดสอบ เรื่อง ฟังก์ชันตรีโกณมิติ ม.5",
+            logoUrl: "https://via.placeholder.com/50",
+            sheetUrl: "",
+            password: "1234"
+        };
+
+        let grades = JSON.parse(localStorage.getItem('math_trig_grades_m5')) || ["ม.5/1", "ม.5/2"];
+        let submittedStudents = JSON.parse(localStorage.getItem('math_submitted_students_m5')) || [];
+
+        // คลังข้อสอบที่แก้ไขและตรวจสอบความถูกต้องแล้ว (ไม่มีเครื่องหมาย $ เกิน)
+        let defaultQuestions = JSON.parse(localStorage.getItem('math_trig_questions_m5')) || [
+            { q: "มุม 210^\\circ มีค่าเท่ากับกี่เรเดียน", opts: ["\\frac{5\\pi}{6}", "\\frac{7\\pi}{6}", "\\frac{3\\pi}{4}", "\\frac{4\\pi}{3}"], ans: 1, exp: "แปลงองศาเป็นเรเดียนคูณ \\frac{\\pi}{180} ได้ \\frac{7\\pi}{6}" },
+            { q: "ค่าของ \\cos\\left(\\frac{5\\pi}{3}\\right) ตรงกับข้อใด", opts: ["\\frac{1}{2}", "-\\frac{1}{2}", "\\frac{\\sqrt{3}}{2}", "-\\frac{\\sqrt{3}}{2}"], ans: 0, exp: "มุม 300 องศา อยู่ใน Q4 \\cos เป็นบวก ได้ \\frac{1}{2}" },
+            { q: "ถ้า \\sin \\theta = \\frac{4}{5} และ \\theta อยู่ในควอแดนต์ที่ 2 จงหาค่าของ \\cos \\theta", opts: ["\\frac{3}{5}", "-\\frac{3}{5}", "\\frac{4}{3}", "-\\frac{4}{3}"], ans: 1, exp: "ใน Q2 ค่า \\cos เป็นลบ ได้ -\\frac{3}{5}" },
+            { q: "ค่าของ \\sin(15^\\circ) ตรงกับข้อใด", opts: ["\\frac{\\sqrt{6}-\\sqrt{2}}{4}", "\\frac{\\sqrt{6}+\\sqrt{2}}{4}", "\\frac{\\sqrt{3}-1}{2}", "\\frac{\\sqrt{3}+1}{2}"], ans: 0, exp: "จากสูตรผลลบ \\sin(45^\\circ-30^\\circ) = \\frac{\\sqrt{6}-\\sqrt{2}}{4}" },
+            { q: "คาบ (Period) ของฟังก์ชัน y = 2\\cos(3x) คือข้อใด", opts: ["\\frac{2\\pi}{3}", "\\frac{\\pi}{3}", "2\\pi", "3\\pi"], ans: 0, exp: "คาบหาจาก \\frac{2\\pi}{|b|} ในที่นี้ b=3 ได้ \\frac{2\\pi}{3}" },
+            { q: "ค่าของ \\arccos\\left(\\frac{\\sqrt{3}}{2}\\right) คือมุมในข้อใด", opts: ["\\frac{\\pi}{6}", "\\frac{\\pi}{4}", "\\frac{\\pi}{3}", "\\frac{\\pi}{2}"], ans: 0, exp: "มุมในช่วง [0, \\pi] ที่ทำให้ \\cos ได้ \\frac{\\sqrt{3}}{2} คือ \\frac{\\pi}{6}" },
+            { q: "ในรูปสามเหลี่ยม ABC ถ้า a=5, b=5, c=6 จงหาค่าของ \\cos C", opts: ["\\frac{7}{25}", "\\frac{1}{5}", "\\frac{2}{3}", "\\frac{1}{2}"], ans: 0, exp: "จากกฎของโคไซน์ c^2=a^2+b^2-2ab\\cos C ได้ \\cos C = \\frac{7}{25}" },
+            { q: "เสาธงทอดเงายาว 15 เมตร บนพื้นราบ ทำมุม 60^\\circ กับพื้นดิน ความสูงเสาธงคือเท่าใด", opts: ["15\\sqrt{3} \\text{ เมตร}", "5\\sqrt{3} \\text{ เมตร}", "10 \\text{ เมตร}", "\\frac{15}{\\sqrt{3}} \\text{ เมตร}"], ans: 0, exp: "\\tan(60^\\circ) = \\frac{h}{15} \\rightarrow h = 15\\sqrt{3}" },
+            { q: "ข้อใดคือค่าของ \\sin(40^\\circ)\\cos(20^\\circ) + \\cos(40^\\circ)\\sin(20^\\circ)", opts: ["\\frac{1}{2}", "\\frac{\\sqrt{3}}{2}", "\\frac{\\sqrt{2}}{2}", "1"], ans: 1, exp: "จากสูตร \\sin(A+B) = \\sin(60^\\circ) = \\frac{\\sqrt{3}}{2}" },
+            { q: "เซตคำตอบของสมการ \\sin x = \\frac{1}{2} เมื่อ x \\in [0, 2\\pi] คือข้อใด", opts: ["\\left\\{\\frac{\\pi}{6}, \\frac{5\\pi}{6}\\right\\}", "\\left\\{\\frac{\\pi}{3}, \\frac{2\\pi}{3}\\right\\}", "\\left\\{\\frac{\\pi}{6}, \\frac{7\\pi}{6}\\right\\}", "\\left\\{\\frac{\\pi}{4}, \\frac{3\\pi}{4}\\right\\}"], ans: 0, exp: "เป็นบวกใน Q1 และ Q2 คือ \\frac{\\pi}{6} และ \\frac{5\\pi}{6}" },
+            
+            { q: "ค่าของ \\sin\\left(\\frac{\\pi}{2}\\right) ตรงกับข้อใด", opts: ["0", "1", "-1", "\\frac{1}{2}"], ans: 1, exp: "พิกัดของ \\frac{\\pi}{2} บนวงกลมหนึ่งหน่วยคือ (0, 1) ค่า sin คือ 1" },
+            { q: "จุดปลายส่วนโค้งที่ยาว \\pi หน่วย บนวงกลมหนึ่งหน่วย ตรงกับพิกัดในข้อใด", opts: ["(1, 0)", "(0, 1)", "(-1, 0)", "(0, -1)"], ans: 2, exp: "ความยาวส่วนโค้ง \\pi คือครึ่งรอบวงกลม ตกที่พิกัด (-1, 0)" },
+            { q: "ค่าของ \\cos(2\\pi) ตรงกับข้อใด", opts: ["0", "1", "-1", "\\frac{\\sqrt{3}}{2}"], ans: 1, exp: "วนครบ 1 รอบวงกลมมาที่ (1, 0) ค่า cos คือ 1" },
+            { q: "ถ้า \\sin \\theta = \\frac{3}{5} และอยู่ในควอแดนต์ที่ 1 จงหาค่าของ \\cos \\theta", opts: ["\\frac{4}{5}", "-\\frac{4}{5}", "\\frac{3}{4}", "-\\frac{3}{4}"], ans: 0, exp: "จาก \\sin^2+\\cos^2=1 ใน Q1 \\cos เป็นบวก ได้ \\frac{4}{5}" },
+            { q: "ค่าของ \\tan\\left(\\frac{\\pi}{4}\\right) เท่ากับข้อใด", opts: ["0", "\\frac{1}{2}", "1", "\\sqrt{3}"], ans: 2, exp: "\\tan(\\frac{\\pi}{4}) = \\frac{\\sin(\\pi/4)}{\\cos(\\pi/4)} = 1" },
+            { q: "มุม 750^\\circ มีค่าเท่ากับเรเดียนในข้อใด", opts: ["\\frac{13\\pi}{6}", "\\frac{25\\pi}{6}", "\\frac{7\\pi}{3}", "\\frac{11\\pi}{6}"], ans: 1, exp: "คูณ \\frac{\\pi}{180} ได้ \\frac{25\\pi}{6}" },
+            { q: "ค่าของ \\sin(-30^\\circ) ตรงกับข้อใด", opts: ["\\frac{1}{2}", "-\\frac{1}{2}", "\\frac{\\sqrt{3}}{2}", "-\\frac{\\sqrt{3}}{2}"], ans: 1, exp: "sin เป็นฟังก์ชันคี่ \\sin(-30^\\circ) = -\\sin(30^\\circ) = -\\frac{1}{2}" },
+            { q: "ค่าของ \\cos(300^\\circ) ตรงกับข้อใด", opts: ["\\frac{1}{2}", "-\\frac{1}{2}", "\\frac{\\sqrt{3}}{2}", "-\\frac{\\sqrt{3}}{2}"], ans: 0, exp: "\\cos(360^\\circ-60^\\circ) = \\cos(60^\\circ) = \\frac{1}{2}" },
+            { q: "กราฟของฟังก์ชัน y = 3\\sin x มีแอมพลิจูด (Amplitude) เท่ากับข้อใด", opts: ["1", "2", "3", "\\pi"], ans: 2, exp: "รูปแบบ y = a\\sin(bx) แอมพลิจูดคือ |a| ในที่นี้คือ 3" },
+            { q: "คาบของฟังก์ชัน y = \\cos(2x) คือข้อใด", opts: ["\\pi", "2\\pi", "\\frac{\\pi}{2}", "4\\pi"], ans: 0, exp: "คาบหาจาก \\frac{2\\pi}{2} = \\pi" },
+
+            { q: "ค่าของ \\sin(75^\\circ) ตรงกับข้อใด", opts: ["\\frac{\\sqrt{6} + \\sqrt{2}}{4}", "\\frac{\\sqrt{6} - \\sqrt{2}}{4}", "\\frac{\\sqrt{3} + 1}{2}", "\\frac{\\sqrt{3} - 1}{2}"], ans: 0, exp: "\\sin(45^\\circ+30^\\circ) = \\frac{\\sqrt{6}+\\sqrt{2}}{4}" },
+            { q: "ค่าของ \\cos(15^\\circ) ตรงกับข้อใด", opts: ["\\frac{\\sqrt{6} + \\sqrt{2}}{4}", "\\frac{\\sqrt{6} - \\sqrt{2}}{4}", "\\frac{\\sqrt{3} + 1}{2}", "\\frac{\\sqrt{3} - 1}{2}"], ans: 0, exp: "\\cos(45^\\circ-30^\\circ) = \\frac{\\sqrt{6}+\\sqrt{2}}{4}" },
+            { q: "ถ้า \\sin A = \\frac{3}{5} จงหาค่าของ \\cos(2A) (เมื่อ A เป็นมุมแหลม)", opts: ["\\frac{7}{25}", "-\\frac{7}{25}", "\\frac{24}{25}", "-\\frac{24}{25}"], ans: 0, exp: "\\cos(2A) = 1 - 2\\sin^2 A = 1 - 2(\\frac{3}{5})^2 = \\frac{7}{25}" },
+            { q: "ค่าของ 2\\sin(15^\\circ)\\cos(15^\\circ) ตรงกับข้อใด", opts: ["\\frac{1}{2}", "\\frac{\\sqrt{3}}{2}", "1", "0"], ans: 0, exp: "จากสูตรมุมสองเท่า \\sin(2A) = \\sin(30^\\circ) = \\frac{1}{2}" },
+            { q: "เรนจ์ (Range) ของตัวผกผันฟังก์ชันไซน์ (Arcsine) คือช่วงใด", opts: ["[0, \\pi]", "\\left[-\\frac{\\pi}{2}, \\frac{\\pi}{2}\\right]", "(-\\pi, \\pi)", "\\left(0, \\frac{\\pi}{2}\\right)"], ans: 1, exp: "เรนจ์หลักของ \\arcsin x คือ \\left[-\\frac{\\pi}{2}, \\frac{\\pi}{2}\\right]" },
+            { q: "ค่าของ \\arcsin\\left(\\frac{1}{2}\\right) คือมุมในข้อใด", opts: ["\\frac{\\pi}{6}", "\\frac{\\pi}{4}", "\\frac{\\pi}{3}", "\\frac{\\pi}{2}"], ans: 0, exp: "มุมในช่วง \\left[-\\frac{\\pi}{2}, \\frac{\\pi}{2}\\right] ที่ทำให้ sin ได้ \\frac{1}{2} คือ \\frac{\\pi}{6}" },
+            { q: "ค่าของ \\arccos(0) ตรงกับข้อใด", opts: ["0", "\\frac{\\pi}{4}", "\\frac{\\pi}{2}", "\\pi"], ans: 2, exp: "เรนจ์ของ \\arccos x คือ [0, \\pi] มุมที่ทำให้ \\cos ได้ 0 คือ \\frac{\\pi}{2}" },
+            { q: "เซตคำตอบของสมการ \\sin x = 0 เมื่อ x \\in [0, 2\\pi] คือข้อใด", opts: ["\\{0, \\pi, 2\\pi\\}", "\\left\\{\\frac{\\pi}{2}, \\frac{3\\pi}{2}\\right\\}", "\\{0, 2\\pi\\}", "\\{\\pi\\}"], ans: 0, exp: "ค่า sin เป็น 0 บนช่วง [0, 2\\pi] คือ 0, \\pi, 2\\pi" },
+            { q: "สามเหลี่ยม ABC มีมุม A = 30^\\circ, B = 45^\\circ และด้าน a = 10 จงหาด้าน b", opts: ["10\\sqrt{2}", "5\\sqrt{2}", "20", "10\\sqrt{3}"], ans: 0, exp: "จากกฎของไซน์ \\frac{b}{\\sin 45^\\circ} = \\frac{10}{\\sin 30^\\circ} \\rightarrow b = 10\\sqrt{2}" },
+            { q: "ค่าของ \\cos(75^\\circ)\\cos(15^\\circ) + \\sin(75^\\circ)\\sin(15^\\circ) ตรงกับข้อใด", opts: ["0", "\\frac{1}{2}", "\\frac{\\sqrt{3}}{2}", "1"], ans: 1, exp: "จากสูตรผลลบ cos \\cos(75^\\circ-15^\\circ) = \\cos(60^\\circ) = \\frac{1}{2}" }
+        ];
+
+        let questions = JSON.parse(JSON.stringify(defaultQuestions));
+        let currentUser = {};
+        let timerInterval;
+        let timeLeft = 3600;
+        let cheatViolations = 0;
+
+        function initConfig() {
+            document.getElementById('schoolLogo').src = config.logoUrl;
+            document.getElementById('headerTitle').innerText = config.schoolName;
+            document.getElementById('headerSubtitle').innerText = config.examTitle;
+            document.getElementById('formMainTitle').innerText = config.examTitle;
+
+            document.getElementById('tSchoolName').value = config.schoolName;
+            document.getElementById('tExamTitle').value = config.examTitle;
+            document.getElementById('tLogoUrl').value = config.logoUrl;
+            document.getElementById('tSheetUrl').value = config.sheetUrl;
+            document.getElementById('tPassword').value = config.password;
+
+            renderGradeDropdown();
+        }
+
+        initConfig();
+
+        function renderGradeDropdown() {
+            const select = document.getElementById('stdGrade');
+            select.innerHTML = '';
+            grades.forEach(g => {
+                select.innerHTML += `<option value="${g}">${g}</option>`;
+            });
+        }
+
+        function renderGradeManager() {
+            const container = document.getElementById('gradeListContainer');
+            container.innerHTML = '';
+            grades.forEach((g, index) => {
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-slate-200">
+                        <span class="text-sm font-medium text-slate-700">${g}</span>
+                        <button onclick="removeGrade(${index})" class="text-rose-600 hover:text-rose-800 text-xs font-semibold px-2 py-1 bg-rose-50 rounded">🗑️ ลบห้อง</button>
+                    </div>
+                `;
+            });
+        }
+
+        function addGrade() {
+            const input = document.getElementById('newGradeInput');
+            const val = input.value.trim();
+            if (val && !grades.includes(val)) {
+                grades.push(val);
+                localStorage.setItem('math_trig_grades_m5', JSON.stringify(grades));
+                input.value = '';
+                renderGradeManager();
+                renderGradeDropdown();
+                alert("เพิ่มห้องเรียนสำเร็จ!");
+            } else {
+                alert("กรุณากรอกชื่อห้องหรือห้องนี้มีอยู่แล้ว");
+            }
+        }
+
+        function removeGrade(index) {
+            if (grades.length <= 1) {
+                alert("ต้องมีห้องเรียนไว้อย่างน้อย 1 ห้อง");
+                return;
+            }
+            if (confirm(`ต้องการลบห้อง ${grades[index]} ใช่หรือไม่?`)) {
+                grades.splice(index, 1);
+                localStorage.setItem('math_trig_grades_m5', JSON.stringify(grades));
+                renderGradeManager();
+                renderGradeDropdown();
+            }
+        }
+
+        function renderRecordManager() {
+            const container = document.getElementById('recordListContainer');
+            if (submittedStudents.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">ยังไม่มีนักเรียนส่งข้อสอบในระบบ</p>`;
+                return;
+            }
+            container.innerHTML = '';
+            submittedStudents.forEach((stdId, index) => {
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-slate-200">
+                        <span class="text-sm font-medium text-slate-700">รหัสประจำตัว: <b>${stdId}</b></span>
+                        <button onclick="resetStudentRecord(${index})" class="text-indigo-600 hover:text-indigo-800 text-xs font-semibold px-3 py-1 bg-indigo-50 rounded border border-indigo-200">🔓 รีเซ็ตสิทธิ์ให้สอบใหม่</button>
+                    </div>
+                `;
+            });
+        }
+
+        function resetStudentRecord(index) {
+            if (confirm("ต้องการปลดล็อกสิทธิ์ให้นักเรียนคนนี้สามารถสอบใหม่อีกครั้งใช่หรือไม่?")) {
+                submittedStudents.splice(index, 1);
+                localStorage.setItem('math_submitted_students_m5', JSON.stringify(submittedStudents));
+                renderRecordManager();
+                alert("รีเซ็ตสิทธิ์สำเร็จ!");
+            }
+        }
+
+        function clearAllRecords() {
+            if (confirm("ต้องการล้างประวัติการสอบทั้งหมด เพื่อให้ทุกคนสอบใหม่ได้ใช่หรือไม่?")) {
+                submittedStudents = [];
+                localStorage.setItem('math_submitted_students_m5', JSON.stringify(submittedStudents));
+                renderRecordManager();
+                alert("ล้างประวัติทั้งหมดเรียบร้อยแล้ว!");
+            }
+        }
+
+        function startExam(e) {
+            e.preventDefault();
+            const stdId = document.getElementById('stdId').value.trim();
+
+            if (submittedStudents.includes(stdId)) {
+                document.getElementById('regSection').classList.add('hidden');
+                document.getElementById('blockedSection').classList.remove('hidden');
+                return;
+            }
+
+            currentUser.id = stdId;
+            currentUser.name = document.getElementById('stdName').value;
+            currentUser.grade = document.getElementById('stdGrade').value;
+            currentUser.no = document.getElementById('stdNo').value;
+
+            document.getElementById('displayName').innerText = currentUser.name;
+            document.getElementById('displayId').innerText = `ชั้น ${currentUser.grade} เลขที่ ${currentUser.no} (รหัส: ${currentUser.id})`;
+
+            document.getElementById('regSection').classList.add('hidden');
+            document.getElementById('examSection').classList.remove('hidden');
+
+            renderQuestions();
+            startTimer();
+            initAntiCheat();
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+            questions.forEach((q, index) => {
+                let optsHtml = '';
+                q.opts.forEach((opt, oIndex) => {
+                    optsHtml += `
+                        <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-indigo-50/50 hover:border-indigo-300 cursor-pointer transition">
+                            <input type="radio" name="q_${index}" value="${oIndex}" required class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+                            <span class="text-sm text-slate-700"><b>${['ก', 'ข', 'ค', 'ง'][oIndex]}.</b> \\(${opt}\\)</span>
+                        </label>
+                    `;
+                });
+
+                container.innerHTML += `
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-lg">ข้อที่ ${index + 1}</span>
+                        </div>
+                        <p class="text-slate-900 font-medium text-base">\\(${q.q}\\)</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                            ${optsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (window.MathJax) {
+                MathJax.typeset();
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                document.getElementById('timer').innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("หมดเวลาทำข้อสอบ! ระบบจะทำการส่งคำตอบอัตโนมัติ");
+                    document.getElementById('examForm').dispatchEvent(new Event('submit'));
+                }
+                timeLeft--;
+            }, 1000);
+        }
+
+        function initAntiCheat() {
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    cheatViolations++;
+                    document.getElementById('cheatWarning').classList.remove('hidden');
+                    document.getElementById('cheatCount').innerText = cheatViolations;
+                }
+            });
+        }
+
+        function submitExam(e) {
+            e.preventDefault();
+            clearInterval(timerInterval);
+
+            if (!submittedStudents.includes(currentUser.id)) {
+                submittedStudents.push(currentUser.id);
+                localStorage.setItem('math_submitted_students_m5', JSON.stringify(submittedStudents));
+            }
+
+            let score = 0;
+            questions.forEach((q, index) => {
+                const selected = document.querySelector(`input[name="q_${index}"]:checked`);
+                if (selected && parseInt(selected.value) === q.ans) {
+                    score++;
+                }
+            });
+
+            document.getElementById('scoreDisplay').innerText = score;
+            document.getElementById('scoreStatus').innerText = score >= 15 ? "ยอดเยี่ยม! ผ่านเกณฑ์การประเมิน" : "พยายามได้ดีครับ";
+
+            document.getElementById('examSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.remove('hidden');
+
+            if (config.sheetUrl) {
+                const payload = {
+                    stdId: currentUser.id,
+                    stdName: currentUser.name,
+                    grade: currentUser.grade,
+                    no: currentUser.no,
+                    score: score,
+                    cheat: cheatViolations,
+                    timestamp: new Date().toISOString()
+                };
+                fetch(config.sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(err => console.error("Sheet Error:", err));
+            }
+        }
+
+        function openTeacherModal() {
+            const pwd = prompt("กรุณากรอกรหัสผ่านโหมดคุณครู:");
+            if (pwd === config.password) {
+                document.getElementById('teacherModal').classList.remove('hidden');
+                switchTab('settingsTab');
+            } else if (pwd !== null) {
+                alert("รหัสผ่านไม่ถูกต้อง!");
+            }
+        }
+
+        function closeTeacherModal() {
+            document.getElementById('teacherModal').classList.add('hidden');
+        }
+
+        function switchTab(tabId) {
+            document.getElementById('settingsTab').classList.add('hidden');
+            document.getElementById('gradesTab').classList.add('hidden');
+            document.getElementById('recordsTab').classList.add('hidden');
+            document.getElementById('questionsTab').classList.add('hidden');
+            
+            document.getElementById('btnSettingsTab').className = "pb-2 font-semibold text-slate-500 hover:text-slate-800 text-sm";
+            document.getElementById('btnGradesTab').className = "pb-2 font-semibold text-slate-500 hover:text-slate-800 text-sm";
+            document.getElementById('btnRecordsTab').className = "pb-2 font-semibold text-slate-500 hover:text-slate-800 text-sm";
+            document.getElementById('btnQuestionsTab').className = "pb-2 font-semibold text-slate-500 hover:text-slate-800 text-sm";
+
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById('btn' + tabId.charAt(0).toUpperCase() + tabId.slice(1)).className = "pb-2 font-semibold text-indigo-600 border-b-2 border-indigo-600 text-sm";
+
+            if (tabId === 'gradesTab') {
+                renderGradeManager();
+            } else if (tabId === 'recordsTab') {
+                renderRecordManager();
+            } else if (tabId === 'questionsTab') {
+                renderEditor();
+            }
+        }
+
+        function saveGeneralSettings() {
+            config.schoolName = document.getElementById('tSchoolName').value;
+            config.examTitle = document.getElementById('tExamTitle').value;
+            config.logoUrl = document.getElementById('tLogoUrl').value;
+            config.sheetUrl = document.getElementById('tSheetUrl').value;
+            let newPwd = document.getElementById('tPassword').value;
+            if(newPwd) config.password = newPwd;
+
+            localStorage.setItem('math_trig_config_m5', JSON.stringify(config));
+            initConfig();
+            alert("บันทึกการตั้งค่าเรียบร้อยแล้ว!");
+            closeTeacherModal();
+        }
+
+        function renderEditor() {
+            const container = document.getElementById('editorContainer');
+            container.innerHTML = '';
+            questions.forEach((q, index) => {
+                container.innerHTML += `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-sm text-indigo-700">ข้อที่ ${index + 1}</span>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">โจทย์</label>
+                            <input type="text" id="edit_q_${index}" value="${q.q}" class="w-full px-3 py-1.5 border rounded-lg text-sm bg-white">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><label class="block text-xs text-slate-500">ตัวเลือก ก</label><input type="text" id="edit_opt_${index}_0" value="${q.opts[0]}" class="w-full px-2.5 py-1 border rounded text-xs bg-white"></div>
+                            <div><label class="block text-xs text-slate-500">ตัวเลือก ข</label><input type="text" id="edit_opt_${index}_1" value="${q.opts[1]}" class="w-full px-2.5 py-1 border rounded text-xs bg-white"></div>
+                            <div><label class="block text-xs text-slate-500">ตัวเลือก ค</label><input type="text" id="edit_opt_${index}_2" value="${q.opts[2]}" class="w-full px-2.5 py-1 border rounded text-xs bg-white"></div>
+                            <div><label class="block text-xs text-slate-500">ตัวเลือก ง</label><input type="text" id="edit_opt_${index}_3" value="${q.opts[3]}" class="w-full px-2.5 py-1 border rounded text-xs bg-white"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">เฉลย (0=ก, 1=ข, 2=ค, 3=ง)</label>
+                                <input type="number" min="0" max="3" id="edit_ans_${index}" value="${q.ans}" class="w-full px-3 py-1 border rounded text-sm bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">แนวคิด / คำอธิบาย</label>
+                                <input type="text" id="edit_exp_${index}" value="${q.exp || ''}" class="w-full px-3 py-1 border rounded text-sm bg-white">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function saveAllQuestions() {
+            for (let i = 0; i < questions.length; i++) {
+                questions[i].q = document.getElementById(`edit_q_${i}`).value;
+                questions[i].opts[0] = document.getElementById(`edit_opt_${i}_0`).value;
+                questions[i].opts[1] = document.getElementById(`edit_opt_${i}_1`).value;
+                questions[i].opts[2] = document.getElementById(`edit_opt_${i}_2`).value;
+                questions[i].opts[3] = document.getElementById(`edit_opt_${i}_3`).value;
+                questions[i].ans = parseInt(document.getElementById(`edit_ans_${i}`).value);
+                questions[i].exp = document.getElementById(`edit_exp_${i}`).value;
+            }
+            localStorage.setItem('math_trig_questions_m5', JSON.stringify(questions));
+            alert("บันทึกคลังข้อสอบทั้งหมดเรียบร้อยแล้ว!");
+        }
+
+        function resetDefaultConfig() {
+            if (confirm("ต้องการรีเซ็ตค่าทั้งหมดกลับเป็นค่าเริ่มต้นใช่หรือไม่?")) {
+                localStorage.removeItem('math_trig_config_m5');
+                localStorage.removeItem('math_trig_grades_m5');
+                localStorage.removeItem('math_submitted_students_m5');
+                localStorage.removeItem('math_trig_questions_m5');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
